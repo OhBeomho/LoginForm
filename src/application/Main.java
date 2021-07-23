@@ -264,7 +264,7 @@ public class Main extends Application {
 		if (foundAccount != null) {
 			stateLabel.setText("");
 
-			if (foundAccount.getPassword().equals(password)) {
+			if (!foundAccount.getPassword().equals(password)) {
 				stateLabel.setText("비밀번호가 일치하지 않습니다.");
 				return false;
 			} else {
@@ -279,7 +279,6 @@ public class Main extends Application {
 	}
 
 	private boolean register(String email, String password, String password1, String name) {
-
 		if (!password.equals(password1)) {
 			rStateLabel.setText("비밀번호가 일치하지 않습니다.");
 			return false;
@@ -301,18 +300,14 @@ public class Main extends Application {
 			ps = c.prepareStatement(sql);
 			rs = ps.executeQuery();
 
-			int i = 0;
-
 			while (rs.next()) {
-				if (accounts.get(i).getName().equals(rs.getString("name"))) {
+				if (rs.getString("name").equals(name)) {
 					rStateLabel.setText("이미 사용된 이름입니다.");
 					return false;
-				} else if (accounts.get(i).getEmail().equals(rs.getString("email"))) {
+				} else if (rs.getString("email").equals(email)) {
 					rStateLabel.setText("이미 사용된 이메일입니다.");
 					return false;
 				}
-
-				i++;
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
