@@ -3,10 +3,10 @@ package application;
 public class Account {
 	private String name, email, password;
 
-	public Account(String name, String email, String password) {
-		setName(name);
+	public Account(String email, String password, String name) {
 		setEmail(email);
 		setPassword(password);
+		setName(name);
 	}
 
 	public String getName() {

@@ -1,10 +1,17 @@
 package application;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import javafx.animation.Interpolator;
@@ -26,6 +33,8 @@ import javafx.util.Duration;
 
 public class Main extends Application {
 	private static final int PASSWORD_LENGTH_LIMIT = 20, NAME_LENGTH_LIMIT = 20;
+	private static final File ACCOUNTS_FILE = new File("C:/javaWork/workspace/LoginForm/src/application/files/accounts.txt");
+
 	private Scene scene;
 	private StackPane loginPane, registerPane, loggedInPane;
 	private Button login, register, cancel, rOk;
@@ -34,10 +43,7 @@ public class Main extends Application {
 	private Timeline timeline;
 	private Label loggedInLabel, stateLabel, rStateLabel;
 
-	private Connection c;
-	private PreparedStatement ps;
-	private ResultSet rs;
-	private ArrayList<Account> accounts;
+	private List<Account> accounts;
 	private String name;
 
 	public Main() {
@@ -61,12 +67,7 @@ public class Main extends Application {
 		stateLabel = new Label("");
 		rStateLabel = new Label("");
 
-		try {
-			Class.forName("org.gjt.mm.mysql.Driver");
-			c = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydatabase?serverTimezone=Asia/Seoul&useSSL=false", "root", "1234");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		accounts = new ArrayList<>();
 
 		getAccounts();
 	}
@@ -168,7 +169,6 @@ public class Main extends Application {
 				rStateLabel.setText("");
 				loginPane.translateXProperty().set(-scene.getWidth());
 				registerPane.getChildren().add(loginPane);
-				getAccounts();
 
 				KeyValue kv = new KeyValue(loginPane.translateXProperty(), 0, Interpolator.SPLINE(1, 0, 0, 1));
 				KeyFrame kf = new KeyFrame(Duration.seconds(1), kv);
@@ -234,8 +234,6 @@ public class Main extends Application {
 			}
 		});
 
-		scene.getStylesheets().add(Main.class.getResource("application.css").toString());
-
 		stage.setScene(scene);
 		stage.setResizable(false);
 		stage.setTitle("JavaFX - Login Form");
@@ -295,63 +293,55 @@ public class Main extends Application {
 			return false;
 		}
 
-		try {
-			String sql = "select * from `account`;";
-			ps = c.prepareStatement(sql);
-			rs = ps.executeQuery();
-
-			while (rs.next()) {
-				if (rs.getString("name").equals(name)) {
-					rStateLabel.setText("이미 사용된 이름입니다.");
-					return false;
-				} else if (rs.getString("email").equals(email)) {
-					rStateLabel.setText("이미 사용된 이메일입니다.");
-					return false;
-				}
+		for (Account a : accounts) {
+			if (a.getName().equals(name)) {
+				rStateLabel.setText("이미 사용된 이름입니다.");
+				return false;
+			} else if (a.getEmail().equals(email)) {
+				rStateLabel.setText("이미 사용된 이메일입니다.");
+				return false;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 
 		email.trim();
 		password.trim();
-		password1.trim();
 		name.trim();
 
-		try {
-			String sql = "insert into `account` values(?, ?, ?);";
-			ps = c.prepareStatement(sql);
-			ps.setString(1, email);
-			ps.setString(2, password);
-			ps.setString(3, name);
-			if (!(ps.executeUpdate() > 0)) {
-				rStateLabel.setText("계정을 저장하는 과정에서\n오류가 발생하였습니다.");
-				return false;
-			}
-		} catch (Exception e) {
-			rStateLabel.setText("계정을 저장하는 과정에서\n오류가 발생하였습니다.");
-			return false;
+		try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(ACCOUNTS_FILE, true), Charset.forName("UTF-8")))) {
+			String accountData = email + "/" + password + "/" + name;
+			writer.write(accountData);
+			writer.newLine();
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+
+		Account account = new Account(email, password, name);
+		accounts.add(account);
 
 		return true;
 	}
 
 	private void getAccounts() {
-		accounts.clear();
+		try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(ACCOUNTS_FILE), Charset.forName("UTF-8")))) {
+			String read = "";
 
-		try {
-			String sql = "select * from `account`;";
-			PreparedStatement ps = c.prepareStatement(sql);
-			rs = ps.executeQuery();
+			while ((read = reader.readLine()) != null) {
+				StringTokenizer st = new StringTokenizer(read, "/");
+				String email = st.nextToken(), password = st.nextToken(), name = st.nextToken();
 
-			while (rs.next()) {
-				accounts.add(new Account(rs.getString("name"), rs.getString("email"), rs.getString("password")));
+				Account account = new Account(email, password, name);
+				System.out.println(email + ", " + password + ", " + name);
+				accounts.add(account);
 			}
-		} catch (Exception e) {
+			
+			reader.close();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-
+ 
 	public static void main(String[] args) {
 		launch(args);
 	}
