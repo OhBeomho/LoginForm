@@ -8,7 +8,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.fx.ide.jdt.core.JAVAFX_CONTAINER">
 		<attributes>
-			<attribute name="annotationpath" value="C:/JavaFX SDK/javafx-sdk-11.0.2/lib"/>
+			<attribute name="annotationpath" value="C:/JavaFX_SDK/javafx-sdk-11.0.2/lib"/>
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
