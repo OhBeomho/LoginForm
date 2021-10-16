@@ -11,5 +11,6 @@
 			<attribute name="annotationpath" value="C:/JavaFX_SDK/javafx-sdk-11.0.2/lib"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JavaFX"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
